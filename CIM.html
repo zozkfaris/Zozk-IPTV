@@ -1,0 +1,2086 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>China Import & Shipment Manager</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0f1117;
+  --bg2: #1a1d27;
+  --bg3: #22263a;
+  --border: #2e3352;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --accent: #3b82f6;
+  --accent2: #6366f1;
+  --green: #10b981;
+  --yellow: #f59e0b;
+  --red: #ef4444;
+  --orange: #f97316;
+  --purple: #8b5cf6;
+  --cyan: #06b6d4;
+  --card: #1e2235;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --radius: 12px;
+  --sidebar-w: 230px;
+}
+[data-theme="light"] {
+  --bg: #f0f4f8;
+  --bg2: #ffffff;
+  --bg3: #e8edf5;
+  --border: #d1d9e6;
+  --text: #1e293b;
+  --text2: #475569;
+  --text3: #94a3b8;
+  --card: #ffffff;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+a { text-decoration:none; color:inherit; }
+
+/* ─── LAYOUT ─── */
+.app { display:flex; height:100vh; overflow:hidden; }
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+  z-index: 100;
+  transition: width 0.3s;
+}
+.sidebar-logo {
+  padding: 20px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.logo-text { font-size: 13px; font-weight: 700; line-height: 1.3; }
+.logo-text span { color: var(--accent); }
+
+.nav-section { padding: 8px 0; }
+.nav-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; padding: 8px 16px 4px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px; cursor: pointer;
+  font-size: 13.5px; font-weight: 500; color: var(--text2);
+  border-radius: 0; transition: all 0.15s;
+  border-left: 3px solid transparent;
+  margin: 1px 0;
+}
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: rgba(59,130,246,0.12); color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+.nav-item i { width: 18px; text-align: center; font-size: 14px; }
+.nav-badge { margin-left: auto; background: var(--accent); color: #fff; border-radius: 10px; font-size: 10px; padding: 1px 6px; font-weight: 700; }
+.nav-badge.red { background: var(--red); }
+
+.sidebar-footer { margin-top: auto; padding: 12px 16px; border-top: 1px solid var(--border); }
+.theme-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 8px; cursor: pointer;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); font-size: 13px; width: 100%; transition: all 0.15s;
+}
+.theme-btn:hover { color: var(--text); }
+
+/* ─── MAIN ─── */
+.main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.topbar {
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  padding: 0 24px; height: 56px;
+  display: flex; align-items: center; gap: 16px;
+  flex-shrink: 0; position: sticky; top: 0; z-index: 50;
+}
+.topbar-title { font-size: 16px; font-weight: 700; }
+.topbar-search {
+  flex: 1; max-width: 340px; margin-left: auto;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 12px;
+}
+.topbar-search input { background: none; border: none; outline: none; color: var(--text); font-size: 13px; flex: 1; }
+.topbar-search input::placeholder { color: var(--text3); }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.icon-btn {
+  width: 34px; height: 34px; border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); font-size: 14px; transition: all 0.15s;
+  position: relative;
+}
+.icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+.notif-dot { position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; background: var(--red); border-radius: 50%; }
+.avatar { width: 34px; height: 34px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+.page { padding: 24px; display: none; }
+.page.active { display: block; }
+
+/* ─── CARDS ─── */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.card-title { font-size: 14px; font-weight: 600; color: var(--text2); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.card-title i { color: var(--accent); }
+
+/* ─── STAT CARDS ─── */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+  display: flex; flex-direction: column; gap: 8px;
+  position: relative; overflow: hidden; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.stat-card::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px;
+}
+.stat-card.blue::after { background: var(--accent); }
+.stat-card.orange::after { background: var(--orange); }
+.stat-card.purple::after { background: var(--purple); }
+.stat-card.cyan::after { background: var(--cyan); }
+.stat-card.green::after { background: var(--green); }
+.stat-card.yellow::after { background: var(--yellow); }
+.stat-card.red::after { background: var(--red); }
+.stat-icon { font-size: 22px; }
+.stat-val { font-size: 28px; font-weight: 700; line-height: 1; }
+.stat-label { font-size: 12px; color: var(--text3); font-weight: 500; }
+.stat-sub { font-size: 11px; color: var(--text3); }
+
+/* ─── GRID LAYOUTS ─── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.col-span-2 { grid-column: span 2; }
+
+/* ─── TABLES ─── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { text-align: left; padding: 10px 14px; color: var(--text3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; cursor: pointer; }
+tbody tr:hover { background: var(--bg3); }
+tbody tr:last-child { border-bottom: none; }
+tbody td { padding: 11px 14px; vertical-align: middle; }
+
+/* ─── BADGES ─── */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.badge.blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.badge.green { background: rgba(16,185,129,0.15); color: #34d399; }
+.badge.yellow { background: rgba(245,158,11,0.15); color: #fbbf24; }
+.badge.red { background: rgba(239,68,68,0.15); color: #f87171; }
+.badge.orange { background: rgba(249,115,22,0.15); color: #fb923c; }
+.badge.purple { background: rgba(139,92,246,0.15); color: #a78bfa; }
+.badge.cyan { background: rgba(6,182,212,0.15); color: #22d3ee; }
+.badge.gray { background: rgba(100,116,139,0.15); color: #94a3b8; }
+
+/* ─── BUTTONS ─── */
+.btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #2563eb; }
+.btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.btn-danger { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+.btn-danger:hover { background: var(--red); color: #fff; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-icon { width: 30px; height: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; }
+
+/* ─── SECTION HEADER ─── */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 12px; flex-wrap: wrap; }
+.section-title { font-size: 18px; font-weight: 700; }
+.section-actions { display: flex; align-items: center; gap: 8px; }
+.filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-select { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 7px 10px; font-size: 13px; outline: none; cursor: pointer; }
+.filter-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 7px 12px; font-size: 13px; outline: none; }
+.filter-input::placeholder { color: var(--text3); }
+
+/* ─── MODAL ─── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 999; display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 16px; width: 100%; max-width: 680px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+}
+.modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: 16px; font-weight: 700; }
+.modal-close { width: 30px; height: 30px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text3); background: var(--bg3); border: 1px solid var(--border); font-size: 14px; }
+.modal-close:hover { color: var(--red); }
+.modal-body { padding: 20px 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ─── FORMS ─── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-row { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text2); }
+.form-input, .form-select, .form-textarea {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); padding: 9px 12px;
+  font-size: 13px; outline: none; font-family: inherit; transition: border 0.15s;
+  width: 100%;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-full { grid-column: span 2; }
+
+/* ─── TIMELINE ─── */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.tl-item { display: flex; gap: 12px; padding-bottom: 16px; position: relative; }
+.tl-item:last-child { padding-bottom: 0; }
+.tl-dot {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 11px;
+  border: 2px solid var(--border); background: var(--bg3);
+  color: var(--text3); z-index: 1; margin-top: 2px;
+}
+.tl-dot.done { background: rgba(16,185,129,0.2); border-color: var(--green); color: var(--green); }
+.tl-dot.current { background: rgba(59,130,246,0.2); border-color: var(--accent); color: var(--accent); }
+.tl-line { position: absolute; left: 13px; top: 30px; bottom: 0; width: 2px; background: var(--border); }
+.tl-item:last-child .tl-line { display: none; }
+.tl-content { flex: 1; }
+.tl-title { font-size: 13px; font-weight: 600; }
+.tl-date { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* ─── PROGRESS ─── */
+.progress-bar { background: var(--bg3); border-radius: 10px; height: 6px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 10px; transition: width 0.4s; }
+
+/* ─── AVATAR PLACEHOLDER ─── */
+.product-img {
+  width: 36px; height: 36px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--bg3), var(--border));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+
+/* ─── NOTIFICATION PANEL ─── */
+.notif-panel {
+  position: fixed; top: 56px; right: 0; width: 320px;
+  background: var(--bg2); border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border); border-radius: 0 0 0 12px;
+  box-shadow: var(--shadow); z-index: 200; display: none;
+  max-height: 80vh; overflow-y: auto;
+}
+.notif-panel.open { display: block; }
+.notif-header { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; }
+.notif-item { padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+.notif-item:hover { background: var(--bg3); }
+.notif-item:last-child { border-bottom: none; }
+.notif-title { font-size: 12px; font-weight: 600; }
+.notif-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.notif-time { font-size: 10px; color: var(--text3); margin-top: 4px; }
+
+/* ─── TABS ─── */
+.tabs { display: flex; gap: 2px; background: var(--bg3); border-radius: 8px; padding: 3px; margin-bottom: 20px; width: fit-content; }
+.tab { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); transition: all 0.15s; }
+.tab.active { background: var(--card); color: var(--text); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+
+/* ─── CURRENCY TOGGLE ─── */
+.currency-toggle { display: flex; gap: 6px; }
+.curr-btn { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); transition: all 0.15s; }
+.curr-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ─── LOGIN ─── */
+#loginPage {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.login-box {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.login-logo { text-align: center; margin-bottom: 28px; }
+.login-logo .logo-icon { width: 56px; height: 56px; font-size: 26px; margin: 0 auto 12px; }
+.login-logo h2 { font-size: 20px; font-weight: 700; }
+.login-logo p { font-size: 13px; color: var(--text3); margin-top: 4px; }
+.login-form { display: flex; flex-direction: column; gap: 14px; }
+.login-roles { display: flex; gap: 8px; margin-bottom: 4px; }
+.role-btn { flex: 1; padding: 8px; border-radius: 8px; text-align: center; cursor: pointer; font-size: 12px; font-weight: 600; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); transition: all 0.15s; }
+.role-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(59,130,246,0.1); }
+
+/* ─── DASHBOARD WIDGETS ─── */
+.top-companies { display: flex; flex-direction: column; gap: 10px; }
+.company-row { display: flex; align-items: center; gap: 10px; }
+.company-name { font-size: 13px; font-weight: 500; flex: 1; }
+.company-pct { font-size: 12px; color: var(--text3); width: 36px; text-align: right; }
+
+.recent-orders-mini { display: flex; flex-direction: column; gap: 0; }
+
+/* ─── SHIPMENT DETAIL ─── */
+.shipment-header-card {
+  background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(99,102,241,0.1));
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 20px;
+  margin-bottom: 20px;
+}
+.shipment-meta { display: flex; gap: 32px; flex-wrap: wrap; margin-top: 12px; }
+.meta-item { display: flex; flex-direction: column; gap: 2px; }
+.meta-label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; }
+.meta-val { font-size: 14px; font-weight: 600; }
+
+/* ─── INVENTORY ─── */
+.inv-bar { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.inv-val { width: 40px; text-align: right; font-weight: 600; }
+
+/* ─── REPORTS ─── */
+.report-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.report-metric { text-align: center; padding: 20px; }
+.report-metric-val { font-size: 32px; font-weight: 800; }
+.report-metric-label { font-size: 13px; color: var(--text3); margin-top: 4px; }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 900px) {
+  .sidebar { width: 54px; }
+  .logo-text, .nav-item span, .nav-label, .nav-badge, .sidebar-footer { display: none; }
+  .nav-item { padding: 10px; justify-content: center; }
+  .main { flex: 1; }
+  .grid-2, .form-grid { grid-template-columns: 1fr; }
+  .form-full { grid-column: span 1; }
+  .grid-3 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-icon">🚢</div>
+      <h2>China Import Manager</h2>
+      <p>Sign in to your workspace</p>
+    </div>
+    <div class="login-form">
+      <div>
+        <div class="form-label" style="margin-bottom:8px">Role</div>
+        <div class="login-roles">
+          <div class="role-btn active" onclick="selectRole(this,'admin')"><i class="fas fa-shield-halved"></i> Admin</div>
+          <div class="role-btn" onclick="selectRole(this,'employee')"><i class="fas fa-user"></i> Employee</div>
+          <div class="role-btn" onclick="selectRole(this,'readonly')"><i class="fas fa-eye"></i> Read Only</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Username</label>
+        <input class="form-input" id="loginUser" value="admin" placeholder="Username">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="loginPass" type="password" value="1234" placeholder="Password">
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px" onclick="doLogin()">
+        <i class="fas fa-arrow-right-to-bracket"></i> Sign In
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="mainApp" style="display:none">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🚢</div>
+      <div class="logo-text">China Import<br><span>Manager</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <div class="nav-item active" onclick="nav('dashboard',this)"><i class="fas fa-chart-line"></i><span>Dashboard</span></div>
+      <div class="nav-item" onclick="nav('orders',this)"><i class="fas fa-box"></i><span>Orders</span><span class="nav-badge" id="ordBadge">0</span></div>
+      <div class="nav-item" onclick="nav('shipments',this)"><i class="fas fa-ship"></i><span>Shipments</span></div>
+      <div class="nav-item" onclick="nav('inventory',this)"><i class="fas fa-warehouse"></i><span>Inventory</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Catalog</div>
+      <div class="nav-item" onclick="nav('products',this)"><i class="fas fa-tag"></i><span>Products</span></div>
+      <div class="nav-item" onclick="nav('suppliers',this)"><i class="fas fa-industry"></i><span>Suppliers</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Logistics</div>
+      <div class="nav-item" onclick="nav('shipping',this)"><i class="fas fa-truck"></i><span>Shipping Cos.</span></div>
+      <div class="nav-item" onclick="nav('warehouses',this)"><i class="fas fa-building"></i><span>Warehouses</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Analytics</div>
+      <div class="nav-item" onclick="nav('reports',this)"><i class="fas fa-chart-bar"></i><span>Reports</span></div>
+      <div class="nav-item" onclick="nav('search',this)"><i class="fas fa-magnifying-glass"></i><span>Search</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">System</div>
+      <div class="nav-item" onclick="nav('settings',this)"><i class="fas fa-gear"></i><span>Settings</span></div>
+    </div>
+    <div class="sidebar-footer">
+      <button class="theme-btn" onclick="toggleTheme()">
+        <i class="fas fa-moon" id="themeIcon"></i>
+        <span>Dark Mode</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-title" id="pageTitle">Dashboard</div>
+      <div class="topbar-search">
+        <i class="fas fa-search" style="color:var(--text3);font-size:13px"></i>
+        <input placeholder="Search orders, shipments, products…" id="globalSearch" oninput="handleGlobalSearch(this.value)">
+      </div>
+      <div class="topbar-actions">
+        <div class="icon-btn" onclick="toggleNotif()"><i class="fas fa-bell"></i><span class="notif-dot"></span></div>
+        <div class="icon-btn" onclick="exportPage()"><i class="fas fa-download"></i></div>
+        <div class="avatar" title="Logged in as Admin">A</div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATION PANEL -->
+    <div class="notif-panel" id="notifPanel">
+      <div class="notif-header">🔔 Notifications</div>
+      <div class="notif-item">
+        <div class="notif-title">✈ Shipment ML-2026-052 arriving tomorrow</div>
+        <div class="notif-desc">Air shipment via Moon Line — 170 items</div>
+        <div class="notif-time">Just now</div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-title">⚠ Low Stock: Nike Air Max 90</div>
+        <div class="notif-desc">Only 3 units remaining (min: 10)</div>
+        <div class="notif-time">2 hours ago</div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-title">⏰ Late Supplier: Golden Tech</div>
+        <div class="notif-desc">Order #ORD-2026-089 is 5 days overdue</div>
+        <div class="notif-time">Yesterday</div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-title">🚢 Sea shipment SC-2026-018 delayed</div>
+        <div class="notif-desc">New ETA: July 15, 2026</div>
+        <div class="notif-time">2 days ago</div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-title">💰 Payment Due: Dragon Cargo</div>
+        <div class="notif-desc">$4,200 due in 3 days</div>
+        <div class="notif-time">3 days ago</div>
+      </div>
+    </div>
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card blue" onclick="nav('orders',null)">
+          <div class="stat-icon">📦</div>
+          <div class="stat-val" id="st-total">0</div>
+          <div class="stat-label">Total Orders</div>
+          <div class="stat-sub">All time</div>
+        </div>
+        <div class="stat-card orange" onclick="nav('orders',null)">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-val" id="st-preparing">0</div>
+          <div class="stat-label">Preparing</div>
+          <div class="stat-sub">Supplier side</div>
+        </div>
+        <div class="stat-card purple" onclick="nav('warehouses',null)">
+          <div class="stat-icon">🏢</div>
+          <div class="stat-val" id="st-warehouse">0</div>
+          <div class="stat-label">China Warehouse</div>
+          <div class="stat-sub">Ready to ship</div>
+        </div>
+        <div class="stat-card cyan">
+          <div class="stat-icon">✈</div>
+          <div class="stat-val" id="st-air">0</div>
+          <div class="stat-label">Air Shipments</div>
+          <div class="stat-sub">Active</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-icon">🚢</div>
+          <div class="stat-val" id="st-sea">0</div>
+          <div class="stat-label">Sea Shipments</div>
+          <div class="stat-sub">Active</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">🇮🇶</div>
+          <div class="stat-val" id="st-iraq">0</div>
+          <div class="stat-label">Arrived Iraq</div>
+          <div class="stat-sub">This month</div>
+        </div>
+        <div class="stat-card red" style="grid-column: span 2">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="stat-icon">💰</div>
+              <div class="stat-val" id="st-value">$0</div>
+              <div class="stat-label">Inventory Value</div>
+            </div>
+            <div class="currency-toggle">
+              <div class="curr-btn active" onclick="setCurr('usd',this)">USD</div>
+              <div class="curr-btn" onclick="setCurr('iqd',this)">IQD</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-chart-bar"></i> Monthly Orders</div>
+          <canvas id="monthlyChart" height="180"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-chart-pie"></i> Shipment Types</div>
+          <canvas id="shipTypeChart" height="180"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-trophy"></i> Top Shipping Companies</div>
+          <div class="top-companies" id="topCompanies"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-clock"></i> Recent Orders</div>
+          <div id="recentOrdersDash"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ORDERS ═══ -->
+    <div class="page" id="page-orders">
+      <div class="section-header">
+        <div class="section-title">📦 Orders</div>
+        <div class="section-actions">
+          <button class="btn btn-secondary btn-sm" onclick="exportCSV('orders')"><i class="fas fa-file-csv"></i> CSV</button>
+          <button class="btn btn-primary" onclick="openOrderModal()"><i class="fas fa-plus"></i> New Order</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <input class="filter-input" placeholder="Search orders…" oninput="filterOrders(this.value)" style="width:200px">
+        <select class="filter-select" id="orderStatusFilter" onchange="filterOrders()">
+          <option value="">All Statuses</option>
+          <option>Ordered</option>
+          <option>Preparing</option>
+          <option>Ready</option>
+          <option>Delivered to Warehouse</option>
+          <option>Waiting Shipment</option>
+          <option>Shipped</option>
+          <option>In Transit</option>
+          <option>Arrived Iraq</option>
+          <option>Received</option>
+        </select>
+        <select class="filter-select" id="orderTypeFilter" onchange="filterOrders()">
+          <option value="">All Shipping</option>
+          <option>Air</option>
+          <option>Sea</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Product</th>
+                <th>Supplier</th>
+                <th>Category</th>
+                <th>Qty</th>
+                <th>Total (USD)</th>
+                <th>IQD Value</th>
+                <th>Status</th>
+                <th>Shipment</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SHIPMENTS ═══ -->
+    <div class="page" id="page-shipments">
+      <div class="section-header">
+        <div class="section-title">🚢 Shipments</div>
+        <div class="section-actions">
+          <button class="btn btn-primary" onclick="openShipmentModal()"><i class="fas fa-plus"></i> New Shipment</button>
+        </div>
+      </div>
+      <div id="shipmentsList"></div>
+    </div>
+
+    <!-- ═══ INVENTORY ═══ -->
+    <div class="page" id="page-inventory">
+      <div class="section-header">
+        <div class="section-title">🏭 Inventory</div>
+        <div class="section-actions">
+          <div class="currency-toggle">
+            <div class="curr-btn active" onclick="setCurr('usd',this)">USD</div>
+            <div class="curr-btn" onclick="setCurr('iqd',this)">IQD</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Category</th>
+                <th>Current Stock</th>
+                <th>Reserved</th>
+                <th>Available</th>
+                <th>Avg Cost</th>
+                <th>Total Value</th>
+                <th>Min Stock</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PRODUCTS ═══ -->
+    <div class="page" id="page-products">
+      <div class="section-header">
+        <div class="section-title">🛍 Products</div>
+        <div class="section-actions">
+          <button class="btn btn-primary" onclick="openProductModal()"><i class="fas fa-plus"></i> Add Product</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px" id="productsGrid"></div>
+    </div>
+
+    <!-- ═══ SUPPLIERS ═══ -->
+    <div class="page" id="page-suppliers">
+      <div class="section-header">
+        <div class="section-title">🏭 Suppliers</div>
+        <div class="section-actions">
+          <button class="btn btn-primary" onclick="openSupplierModal()"><i class="fas fa-plus"></i> Add Supplier</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px" id="suppliersGrid"></div>
+    </div>
+
+    <!-- ═══ SHIPPING COMPANIES ═══ -->
+    <div class="page" id="page-shipping">
+      <div class="section-header">
+        <div class="section-title">🚚 Shipping Companies</div>
+        <div class="section-actions">
+          <button class="btn btn-primary" onclick="openShippingModal()"><i class="fas fa-plus"></i> Add Company</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px" id="shippingGrid"></div>
+    </div>
+
+    <!-- ═══ WAREHOUSES ═══ -->
+    <div class="page" id="page-warehouses">
+      <div class="section-header">
+        <div class="section-title">🏢 China Warehouses</div>
+        <div class="section-actions">
+          <button class="btn btn-primary" onclick="openWarehouseModal()"><i class="fas fa-plus"></i> Add Warehouse</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px" id="warehousesGrid"></div>
+    </div>
+
+    <!-- ═══ REPORTS ═══ -->
+    <div class="page" id="page-reports">
+      <div class="section-header"><div class="section-title">📊 Reports & Analytics</div></div>
+      <div class="grid-3" style="margin-bottom:20px">
+        <div class="report-card">
+          <div class="report-metric">
+            <div style="font-size:22px;margin-bottom:8px">💵</div>
+            <div class="report-metric-val" id="rpt-purchases" style="color:var(--accent)">$0</div>
+            <div class="report-metric-label">Total Purchases (USD)</div>
+          </div>
+        </div>
+        <div class="report-card">
+          <div class="report-metric">
+            <div style="font-size:22px;margin-bottom:8px">🚢</div>
+            <div class="report-metric-val" id="rpt-shipping" style="color:var(--purple)">$0</div>
+            <div class="report-metric-label">Shipping Costs</div>
+          </div>
+        </div>
+        <div class="report-card">
+          <div class="report-metric">
+            <div style="font-size:22px;margin-bottom:8px">📦</div>
+            <div class="report-metric-val" id="rpt-orders" style="color:var(--green)">0</div>
+            <div class="report-metric-label">Total Orders</div>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-chart-line"></i> Orders by Month</div>
+          <canvas id="rptMonthly" height="200"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-chart-pie"></i> Orders by Category</div>
+          <canvas id="rptCategory" height="200"></canvas>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-industry"></i> Orders by Supplier</div>
+          <canvas id="rptSupplier" height="200"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-plane-up"></i> Air vs Sea Comparison</div>
+          <canvas id="rptAirSea" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SEARCH ═══ -->
+    <div class="page" id="page-search">
+      <div class="section-header"><div class="section-title">🔍 Advanced Search</div></div>
+      <div class="card" style="margin-bottom:20px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div class="form-row" style="flex:1;min-width:200px">
+            <label class="form-label">Search Term</label>
+            <input class="form-input" id="advSearch" placeholder="Product, model, order #, tracking…" oninput="runAdvSearch()">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Search In</label>
+            <select class="form-select" id="advSearchType" onchange="runAdvSearch()">
+              <option value="all">All</option>
+              <option value="orders">Orders</option>
+              <option value="products">Products</option>
+              <option value="suppliers">Suppliers</option>
+              <option value="shipments">Shipments</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="searchResults"></div>
+    </div>
+
+    <!-- ═══ SETTINGS ═══ -->
+    <div class="page" id="page-settings">
+      <div class="section-header"><div class="section-title">⚙ Settings</div></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-dollar-sign"></i> Currency & Exchange</div>
+          <div class="form-grid" style="grid-template-columns:1fr">
+            <div class="form-row">
+              <label class="form-label">USD to IQD Exchange Rate</label>
+              <input class="form-input" id="settExRate" type="number" value="1310" oninput="saveSettings()">
+            </div>
+            <div class="form-row">
+              <label class="form-label">Default Currency Display</label>
+              <select class="form-select" id="settCurr" onchange="saveSettings()">
+                <option>USD</option><option>IQD</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-palette"></i> Appearance</div>
+          <div class="form-row" style="margin-bottom:14px">
+            <label class="form-label">Theme</label>
+            <select class="form-select" onchange="document.documentElement.setAttribute('data-theme',this.value);updateThemeBtn()">
+              <option value="dark">Dark Mode</option>
+              <option value="light">Light Mode</option>
+            </select>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-database"></i> Data Management</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-secondary" onclick="exportAllData()"><i class="fas fa-download"></i> Export All Data (JSON)</button>
+            <button class="btn btn-secondary" onclick="importData()"><i class="fas fa-upload"></i> Import Data (JSON)</button>
+            <button class="btn btn-danger" onclick="if(confirm('Clear ALL data? This cannot be undone.'))clearData()"><i class="fas fa-trash"></i> Clear All Data</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-user-shield"></i> User Account</div>
+          <div style="padding:10px 0">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+              <div class="avatar" style="width:48px;height:48px;font-size:18px">A</div>
+              <div>
+                <div style="font-weight:700">Administrator</div>
+                <div style="font-size:12px;color:var(--text3)">Full access</div>
+              </div>
+            </div>
+            <button class="btn btn-secondary" onclick="logout()"><i class="fas fa-right-from-bracket"></i> Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end .main -->
+</div><!-- end .app -->
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Order Modal -->
+<div class="modal-overlay" id="orderModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="orderModalTitle">New Order</div>
+      <div class="modal-close" onclick="closeModal('orderModal')"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Order Number</label><input class="form-input" id="ord-num" placeholder="ORD-2026-001"></div>
+        <div class="form-row"><label class="form-label">Order Date</label><input class="form-input" id="ord-date" type="date"></div>
+        <div class="form-row"><label class="form-label">Supplier</label><select class="form-select" id="ord-supplier"></select></div>
+        <div class="form-row"><label class="form-label">Supplier Order #</label><input class="form-input" id="ord-sup-num" placeholder="Supplier ref #"></div>
+        <div class="form-row"><label class="form-label">Product</label><input class="form-input" id="ord-product" placeholder="Product name"></div>
+        <div class="form-row"><label class="form-label">Category</label>
+          <select class="form-select" id="ord-category">
+            <option>Shoes</option><option>Watches</option><option>Bags</option><option>Electronics</option>
+            <option>Clothing</option><option>Accessories</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-row"><label class="form-label">Brand</label><input class="form-input" id="ord-brand" placeholder="Brand name"></div>
+        <div class="form-row"><label class="form-label">Model</label><input class="form-input" id="ord-model" placeholder="Model / SKU"></div>
+        <div class="form-row"><label class="form-label">Color</label><input class="form-input" id="ord-color" placeholder="Color"></div>
+        <div class="form-row"><label class="form-label">Size</label><input class="form-input" id="ord-size" placeholder="Size / variant"></div>
+        <div class="form-row"><label class="form-label">Quantity</label><input class="form-input" id="ord-qty" type="number" oninput="calcOrder()"></div>
+        <div class="form-row"><label class="form-label">Unit Price (USD)</label><input class="form-input" id="ord-price" type="number" step="0.01" oninput="calcOrder()"></div>
+        <div class="form-row"><label class="form-label">Total Price (USD)</label><input class="form-input" id="ord-total" readonly style="background:var(--bg)"></div>
+        <div class="form-row"><label class="form-label">Exchange Rate (IQD)</label><input class="form-input" id="ord-rate" type="number" value="1310" oninput="calcOrder()"></div>
+        <div class="form-row"><label class="form-label">IQD Value</label><input class="form-input" id="ord-iqd" readonly style="background:var(--bg)"></div>
+        <div class="form-row"><label class="form-label">Status</label>
+          <select class="form-select" id="ord-status">
+            <option>Ordered</option><option>Supplier Accepted</option><option>Preparing</option>
+            <option>Ready</option><option>Delivered to Warehouse</option><option>Waiting Shipment</option>
+            <option>Shipped</option><option>In Transit</option><option>Arrived Iraq</option>
+            <option>Received</option><option>Sold</option>
+          </select>
+        </div>
+        <div class="form-row"><label class="form-label">Shipping Type</label>
+          <select class="form-select" id="ord-shiptype"><option>Air</option><option>Sea</option></select>
+        </div>
+        <div class="form-row"><label class="form-label">Ready Date</label><input class="form-input" id="ord-ready" type="date"></div>
+        <div class="form-row"><label class="form-label">Shipment ID (optional)</label><input class="form-input" id="ord-shipment" placeholder="ML-2026-052"></div>
+        <div class="form-row form-full"><label class="form-label">Notes</label><textarea class="form-textarea" id="ord-notes" placeholder="Any notes…"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('orderModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveOrder()"><i class="fas fa-save"></i> Save Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- Order Detail / Timeline Modal -->
+<div class="modal-overlay" id="orderDetailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="odTitle">Order Detail</div>
+      <div class="modal-close" onclick="closeModal('orderDetailModal')"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="modal-body" id="odBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('orderDetailModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shipment Modal -->
+<div class="modal-overlay" id="shipmentModal">
+  <div class="modal" style="max-width:720px">
+    <div class="modal-header">
+      <div class="modal-title">New Shipment</div>
+      <div class="modal-close" onclick="closeModal('shipmentModal')"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Shipment ID</label><input class="form-input" id="sh-id" placeholder="ML-2026-052"></div>
+        <div class="form-row"><label class="form-label">Shipping Company</label><select class="form-select" id="sh-company"></select></div>
+        <div class="form-row"><label class="form-label">Warehouse</label><select class="form-select" id="sh-warehouse"></select></div>
+        <div class="form-row"><label class="form-label">Shipping Type</label>
+          <select class="form-select" id="sh-type"><option>Air</option><option>Sea</option></select>
+        </div>
+        <div class="form-row"><label class="form-label">Container No.</label><input class="form-input" id="sh-container" placeholder="Container number"></div>
+        <div class="form-row"><label class="form-label">Tracking No.</label><input class="form-input" id="sh-tracking" placeholder="Tracking number"></div>
+        <div class="form-row"><label class="form-label">Weight (kg)</label><input class="form-input" id="sh-weight" type="number" placeholder="0"></div>
+        <div class="form-row"><label class="form-label">Volume (m³)</label><input class="form-input" id="sh-volume" type="number" placeholder="0"></div>
+        <div class="form-row"><label class="form-label">Shipping Cost (USD)</label><input class="form-input" id="sh-cost" type="number" placeholder="0"></div>
+        <div class="form-row"><label class="form-label">Status</label>
+          <select class="form-select" id="sh-status">
+            <option>Preparing</option><option>Shipped</option><option>In Transit</option>
+            <option>Arrived Iraq</option><option>Received</option>
+          </select>
+        </div>
+        <div class="form-row"><label class="form-label">Departure Date</label><input class="form-input" id="sh-depart" type="date"></div>
+        <div class="form-row"><label class="form-label">ETA</label><input class="form-input" id="sh-eta" type="date"></div>
+        <div class="form-row"><label class="form-label">Arrival Date</label><input class="form-input" id="sh-arrival" type="date"></div>
+        <div class="form-row form-full"><label class="form-label">Notes</label><textarea class="form-textarea" id="sh-notes"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('shipmentModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveShipment()"><i class="fas fa-save"></i> Save Shipment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add / Edit Product</div>
+      <div class="modal-close" onclick="closeModal('productModal')"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Product Name</label><input class="form-input" id="pr-name"></div>
+        <div class="form-row"><label class="form-label">Category</label>
+          <select class="form-select" id="pr-category">
+            <option>Shoes</option><option>Watches</option><option>Bags</option><option>Electronics</option>
+            <option>Clothing</option><option>Accessories</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-row"><label class="form-label">Brand</label><input class="form-input" id="pr-brand"></div>
+        <div class="form-row"><label class="form-label">Model</label><input class="form-input" id="pr-model"></div>
+        <div class="form-row"><label class="form-label">SKU</label><input class="form-input" id="pr-sku" placeholder="Auto-generated if blank"></div>
+        <div class="form-row"><label class="form-label">Barcode</label><input class="form-input" id="pr-barcode"></div>
+        <div class="form-row"><label class="form-label">Color</label><input class="form-input" id="pr-color"></div>
+        <div class="form-row"><label class="form-label">Size</label><input class="form-input" id="pr-size"></div>
+        <div class="form-row"><label class="form-label">Purchase Price (USD)</label><input class="form-input" id="pr-purchase" type="number" step="0.01"></div>
+        <div class="form-row"><label class="form-label">Selling Price (USD)</label><input class="form-input" id="pr-selling" type="number" step="0.01"></div>
+        <div class="form-row"><label class="form-label">Current Stock</label><input class="form-input" id="pr-stock" type="number" value="0"></div>
+        <div class="form-row"><label class="form-label">Minimum Stock</label><input class="form-input" id="pr-minstock" type="number" value="5"></div>
+        <div class="form-row form-full"><label class="form-label">Description</label><textarea class="form-textarea" id="pr-desc"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('productModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProduct()"><i class="fas fa-save"></i> Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supplier Modal -->
+<div class="modal-overlay" id="supplierModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add / Edit Supplier</div>
+      <div class="modal-close" onclick="closeModal('supplierModal')"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-row form-full"><label class="form-label">Supplier Name</label><input class="form-input" id="sup-name"></div>
+        <div class="form-row"><label class="form-label">Alibaba Link</label><input class="form-input" id="sup-alibaba" placeholder="https://…"></div>
+        <div class="form-row"><label class="form-label">1688 Link</label><input class="form-input" id="sup-1688" placeholder="https://…"></div>
+        <div class="form-row"><label class="form-label">Contact Person</label><input class="form-input" id="sup-contact"></div>
+        <div class="form-row"><label class="form-label">WhatsApp</label><input class="form-input" id="sup-wa" placeholder="+86…"></div>
+        <div class="form-row"><label class="form-label">WeChat</label><input class="form-input" id="sup-wechat"></div>
+        <div class="form-row"><label class="form-label">Email</label><input class="form-input" id="sup-email" type="email"></div>
+        <div class="form-row"><label class="form-label">Phone</label><input class="form-input" id="sup-phone"></div>
+        <div class="form-row"><label class="form-label">Rating</label>
+          <select class="form-select" id="sup-rating"><option>⭐⭐⭐⭐⭐ 5</option><option>⭐⭐⭐⭐ 4</option><option>⭐⭐⭐ 3</option><option>⭐⭐ 2</option><option>⭐ 1</option></select>
+        </div>
+        <div class="form-row"><label class="form-label">Address</label><input class="form-input" id="sup-address"></div>
+        <div class="form-row form-full"><label class="form-label">Notes</label><textarea class="form-textarea" id="sup-notes"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('supplierModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSupplier()"><i class="fas fa-save"></i> Save Supplier</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shipping Company Modal -->
+<div class="modal-overlay" id="shippingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add / Edit Shipping Company</div>
+      <div class="modal-close" onclick="closeModal('shippingModal')"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-row form-full"><label class="form-label">Company Name</label><input class="form-input" id="sc-name"></div>
+        <div class="form-row"><label class="form-label">Contact Person</label><input class="form-input" id="sc-contact"></div>
+        <div class="form-row"><label class="form-label">Phone</label><input class="form-input" id="sc-phone"></div>
+        <div class="form-row"><label class="form-label">WhatsApp</label><input class="form-input" id="sc-wa"></div>
+        <div class="form-row"><label class="form-label">Email</label><input class="form-input" id="sc-email" type="email"></div>
+        <div class="form-row"><label class="form-label">Address</label><input class="form-input" id="sc-address"></div>
+        <div class="form-row"><label class="form-label">Warehouse City</label><input class="form-input" id="sc-city"></div>
+        <div class="form-row"><label class="form-label">Website</label><input class="form-input" id="sc-website"></div>
+        <div class="form-row"><label class="form-label">Supports Air</label>
+          <select class="form-select" id="sc-air"><option value="1">Yes</option><option value="0">No</option></select>
+        </div>
+        <div class="form-row"><label class="form-label">Supports Sea</label>
+          <select class="form-select" id="sc-sea"><option value="1">Yes</option><option value="0">No</option></select>
+        </div>
+        <div class="form-row form-full"><label class="form-label">Notes</label><textarea class="form-textarea" id="sc-notes"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('shippingModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveShippingCo()"><i class="fas fa-save"></i> Save Company</button>
+    </div>
+  </div>
+</div>
+
+<!-- Warehouse Modal -->
+<div class="modal-overlay" id="warehouseModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add / Edit Warehouse</div>
+      <div class="modal-close" onclick="closeModal('warehouseModal')"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-row form-full"><label class="form-label">Warehouse Name</label><input class="form-input" id="wh-name"></div>
+        <div class="form-row"><label class="form-label">Shipping Company</label><select class="form-select" id="wh-company"></select></div>
+        <div class="form-row"><label class="form-label">City</label><input class="form-input" id="wh-city"></div>
+        <div class="form-row"><label class="form-label">Province</label><input class="form-input" id="wh-province"></div>
+        <div class="form-row"><label class="form-label">Receiver Name</label><input class="form-input" id="wh-receiver"></div>
+        <div class="form-row"><label class="form-label">Receiver Phone</label><input class="form-input" id="wh-phone"></div>
+        <div class="form-row form-full"><label class="form-label">Full Address</label><input class="form-input" id="wh-address"></div>
+        <div class="form-row"><label class="form-label">Zip Code</label><input class="form-input" id="wh-zip"></div>
+        <div class="form-row form-full"><label class="form-label">Notes</label><textarea class="form-textarea" id="wh-notes"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('warehouseModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveWarehouse()"><i class="fas fa-save"></i> Save Warehouse</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  DATA STORE
+// ═══════════════════════════════════════════
+const RATE = () => parseInt(ls('exRate') || 1310);
+let editId = null;
+let currency = 'usd';
+let chartMonthly, chartShipType, chartRptMonthly, chartRptCat, chartRptSup, chartRptAS;
+
+function ls(k){ return localStorage.getItem('cim_'+k); }
+function lss(k,v){ localStorage.setItem('cim_'+k, typeof v==='object'?JSON.stringify(v):v); }
+function lsg(k){ try{ return JSON.parse(localStorage.getItem('cim_'+k))||[]; }catch(e){ return []; } }
+
+// Seed demo data if empty
+function seedData(){
+  if(lsg('orders').length) return;
+
+  const suppliers = [
+    {id:'s1',name:'Golden Tech Electronics',contact:'Zhang Wei',wa:'+8613812345678',email:'golden@tech.cn',rating:'⭐⭐⭐⭐⭐ 5',alibaba:'https://alibaba.com',notes:'Reliable, fast processing'},
+    {id:'s2',name:'Star Fashion Factory',contact:'Li Ming',wa:'+8613987654321',email:'star@fashion.cn',rating:'⭐⭐⭐⭐ 4',alibaba:'https://alibaba.com',notes:'Good quality clothing'},
+    {id:'s3',name:'Dragon Sports Co.',contact:'Wang Fang',wa:'+8613765432109',email:'dragon@sports.cn',rating:'⭐⭐⭐⭐⭐ 5',alibaba:'https://alibaba.com',notes:'Nike & Adidas replicas'},
+  ];
+  const shippingCos = [
+    {id:'sc1',name:'Moon Line',contact:'Ahmed Al-Rashid',phone:'+9647701234567',wa:'+9647701234567',email:'info@moonline.iq',city:'Guangzhou',air:1,sea:1,notes:'Best air rates'},
+    {id:'sc2',name:'Sky Express',contact:'Omar Hassan',phone:'+9647809876543',wa:'+9647809876543',email:'sky@express.iq',city:'Shenzhen',air:1,sea:0,notes:'Air only, very fast'},
+    {id:'sc3',name:'Dragon Cargo',contact:'Ali Karimi',phone:'+9647712345678',wa:'+9647712345678',email:'dragon@cargo.iq',city:'Yiwu',air:0,sea:1,notes:'Sea shipping specialist'},
+    {id:'sc4',name:'Fast Cargo',contact:'Hassan Ali',phone:'+9647756789012',wa:'+9647756789012',email:'fast@cargo.iq',city:'Shanghai',air:1,sea:1,notes:'Good for heavy cargo'},
+  ];
+  const warehouses = [
+    {id:'wh1',name:'Guangzhou Main Warehouse',company:'sc1',city:'Guangzhou',province:'Guangdong',receiver:'Mr. Chen',phone:'+8613512345678',address:'123 Import Street, Guangzhou',zip:'510000'},
+    {id:'wh2',name:'Shenzhen Hub',company:'sc1',city:'Shenzhen',province:'Guangdong',receiver:'Ms. Liu',phone:'+8613612345678',address:'456 Trade Road, Shenzhen',zip:'518000'},
+    {id:'wh3',name:'Yiwu Market Warehouse',company:'sc3',city:'Yiwu',province:'Zhejiang',receiver:'Mr. Wang',phone:'+8613712345678',address:'789 Market Blvd, Yiwu',zip:'322000'},
+  ];
+  const products = [
+    {id:'p1',name:'Nike Air Max 90',category:'Shoes',brand:'Nike',model:'Air Max 90',sku:'NK-AM90-42',barcode:'1234567890',color:'White/Black',size:'42',purchase:25,selling:75,stock:45,minstock:10,desc:'Classic running shoes'},
+    {id:'p2',name:'DT G10 Watch',category:'Watches',brand:'DT',model:'G10',sku:'DT-G10-BLK',barcode:'2345678901',color:'Black',size:'One Size',purchase:18,selling:55,stock:120,minstock:20,desc:'Smart watch replica'},
+    {id:'p3',name:'Designer Handbag',category:'Bags',brand:'Generic',model:'HB-2024',sku:'HB-2024-BRN',barcode:'3456789012',color:'Brown',size:'Medium',purchase:35,selling:95,stock:3,minstock:10,desc:'Fashion handbag'},
+    {id:'p4',name:'Anker Power Bank 20000',category:'Electronics',brand:'Anker',model:'A1263',sku:'AN-1263-BLK',barcode:'4567890123',color:'Black',size:'',purchase:22,selling:60,stock:200,minstock:30,desc:'20000mAh power bank'},
+  ];
+  const shipments = [
+    {id:'sh1',shipId:'ML-2026-052',company:'sc1',warehouse:'wh1',type:'Air',container:'',tracking:'MA1234567CN',weight:85,volume:0.4,cost:1200,status:'In Transit',depart:'2026-06-20',eta:'2026-06-28',arrival:'',notes:'Priority air shipment'},
+    {id:'sh2',shipId:'SC-2026-018',company:'sc3',warehouse:'wh3',type:'Sea',container:'MSCU7654321',tracking:'SC9876543CN',weight:2400,volume:18,cost:3800,status:'Shipped',depart:'2026-06-01',eta:'2026-07-15',arrival:'',notes:'Large sea container'},
+  ];
+  const orders = [
+    {id:'o1',num:'ORD-2026-089',supplier:'s1',supNum:'GT-1234',product:'Nike Air Max 90',category:'Shoes',brand:'Nike',model:'Air Max 90',color:'White',size:'42',qty:50,price:25,total:1250,rate:1310,iqd:1637500,status:'Preparing',shiptype:'Air',shipment:'ML-2026-052',date:'2026-06-01',ready:'',notes:''},
+    {id:'o2',num:'ORD-2026-090',supplier:'s1',supNum:'GT-1235',product:'DT G10 Watch',category:'Watches',brand:'DT',model:'G10',color:'Black',size:'',qty:40,price:18,total:720,rate:1310,iqd:943200,status:'In Transit',shiptype:'Air',shipment:'ML-2026-052',date:'2026-06-02',ready:'2026-06-18',notes:''},
+    {id:'o3',num:'ORD-2026-091',supplier:'s2',supNum:'SF-556',product:'Summer Dress Collection',category:'Clothing',brand:'Generic',model:'SD-2026',color:'Mixed',size:'M/L',qty:100,price:12,total:1200,rate:1310,iqd:1572000,status:'Delivered to Warehouse',shiptype:'Sea',shipment:'SC-2026-018',date:'2026-05-25',ready:'2026-06-10',notes:'Mixed colors'},
+    {id:'o4',num:'ORD-2026-092',supplier:'s3',supNum:'DS-889',product:'Designer Handbag',category:'Bags',brand:'Generic',model:'HB-2024',color:'Brown',size:'Medium',qty:30,price:35,total:1050,rate:1310,iqd:1375500,status:'Shipped',shiptype:'Sea',shipment:'SC-2026-018',date:'2026-05-28',ready:'2026-06-12',notes:''},
+    {id:'o5',num:'ORD-2026-093',supplier:'s1',supNum:'GT-1300',product:'Anker Power Bank',category:'Electronics',brand:'Anker',model:'A1263',color:'Black',size:'',qty:100,price:22,total:2200,rate:1310,iqd:2882000,status:'Arrived Iraq',shiptype:'Air',shipment:'ML-2026-045',date:'2026-05-15',ready:'2026-05-25',notes:'Fast seller'},
+    {id:'o6',num:'ORD-2026-094',supplier:'s2',supNum:'SF-601',product:'Men Sport Jacket',category:'Clothing',brand:'Generic',model:'MJ-2026',color:'Navy',size:'XL',qty:60,price:28,total:1680,rate:1310,iqd:2200800,status:'Ordered',shiptype:'Air',shipment:'',date:'2026-06-25',ready:'',notes:'New season'},
+    {id:'o7',num:'ORD-2026-088',supplier:'s3',supNum:'DS-850',product:'Nike Air Force 1',category:'Shoes',brand:'Nike',model:'AF1',color:'White',size:'43',qty:45,price:24,total:1080,rate:1310,iqd:1414800,status:'Received',shiptype:'Sea',shipment:'SC-2026-010',date:'2026-04-10',ready:'2026-04-25',notes:''},
+  ];
+
+  lss('suppliers', suppliers);
+  lss('shippingCos', shippingCos);
+  lss('warehouses', warehouses);
+  lss('products', products);
+  lss('shipments', shipments);
+  lss('orders', orders);
+  lss('exRate', 1310);
+}
+
+// ═══════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════
+let selectedRole = 'admin';
+function selectRole(el, role){
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active'); selectedRole = role;
+}
+function doLogin(){
+  const u = document.getElementById('loginUser').value;
+  const p = document.getElementById('loginPass').value;
+  if(!u||!p){ alert('Enter credentials'); return; }
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('mainApp').style.display='flex';
+  seedData();
+  initApp();
+}
+function logout(){
+  document.getElementById('loginPage').style.display='flex';
+  document.getElementById('mainApp').style.display='none';
+}
+
+// ═══════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════
+const pageTitles = {
+  dashboard:'Dashboard', orders:'Orders', shipments:'Shipments', inventory:'Inventory',
+  products:'Products', suppliers:'Suppliers', shipping:'Shipping Companies',
+  warehouses:'China Warehouses', reports:'Reports', search:'Search', settings:'Settings'
+};
+function nav(page, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(el) el.classList.add('active');
+  else {
+    document.querySelectorAll('.nav-item').forEach(n=>{
+      if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+page+"'")) n.classList.add('active');
+    });
+  }
+  document.getElementById('pageTitle').textContent = pageTitles[page]||page;
+  // Refresh relevant content
+  if(page==='dashboard') renderDashboard();
+  if(page==='orders') renderOrders();
+  if(page==='shipments') renderShipments();
+  if(page==='inventory') renderInventory();
+  if(page==='products') renderProducts();
+  if(page==='suppliers') renderSuppliers();
+  if(page==='shipping') renderShippingCos();
+  if(page==='warehouses') renderWarehouses();
+  if(page==='reports') renderReports();
+  // close notif panel
+  document.getElementById('notifPanel').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════
+function renderDashboard(){
+  const orders = lsg('orders');
+  const shipments = lsg('shipments');
+  const products = lsg('products');
+
+  const statuses = {preparing:0, warehouse:0, air:0, sea:0, iraq:0};
+  orders.forEach(o=>{
+    if(o.status==='Preparing') statuses.preparing++;
+    if(o.status==='Delivered to Warehouse'||o.status==='Waiting Shipment') statuses.warehouse++;
+    if(o.status==='Arrived Iraq') statuses.iraq++;
+    if((o.status==='In Transit'||o.status==='Shipped')&&o.shiptype==='Air') statuses.air++;
+    if((o.status==='In Transit'||o.status==='Shipped')&&o.shiptype==='Sea') statuses.sea++;
+  });
+
+  document.getElementById('st-total').textContent = orders.length;
+  document.getElementById('st-preparing').textContent = statuses.preparing;
+  document.getElementById('st-warehouse').textContent = statuses.warehouse;
+  document.getElementById('st-air').textContent = statuses.air;
+  document.getElementById('st-sea').textContent = statuses.sea;
+  document.getElementById('st-iraq').textContent = statuses.iraq;
+  document.getElementById('ordBadge').textContent = orders.filter(o=>o.status!=='Received'&&o.status!=='Sold').length;
+
+  const totalValue = products.reduce((s,p)=>s+((p.stock||0)*(p.purchase||0)),0);
+  document.getElementById('st-value').textContent = currency==='usd'?`$${totalValue.toLocaleString()}`:`IQD ${(totalValue*RATE()).toLocaleString()}`;
+
+  // Monthly chart
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthly = new Array(12).fill(0);
+  orders.forEach(o=>{ if(o.date){ const m=new Date(o.date).getMonth(); monthly[m]++; } });
+  if(chartMonthly) chartMonthly.destroy();
+  chartMonthly = new Chart(document.getElementById('monthlyChart'),{
+    type:'bar',
+    data:{ labels:months, datasets:[{label:'Orders',data:monthly,backgroundColor:'rgba(59,130,246,0.7)',borderRadius:6}] },
+    options:{ plugins:{legend:{display:false}}, scales:{ x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#94a3b8'}}, y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#94a3b8'}} } }
+  });
+
+  // Shipment type chart
+  const airC = orders.filter(o=>o.shiptype==='Air').length;
+  const seaC = orders.filter(o=>o.shiptype==='Sea').length;
+  if(chartShipType) chartShipType.destroy();
+  chartShipType = new Chart(document.getElementById('shipTypeChart'),{
+    type:'doughnut',
+    data:{ labels:['Air','Sea'], datasets:[{data:[airC,seaC],backgroundColor:['rgba(6,182,212,0.8)','rgba(99,102,241,0.8)'],borderWidth:0}] },
+    options:{ plugins:{legend:{position:'bottom',labels:{color:'#94a3b8'}}} }
+  });
+
+  // Top companies
+  const coOrders = {};
+  const shippingCos = lsg('shippingCos');
+  orders.forEach(o=>{
+    const sh = shipments.find(s=>s.shipId===o.shipment);
+    if(sh){
+      const co = shippingCos.find(c=>c.id===sh.company);
+      const name = co?co.name:'Unknown';
+      coOrders[name]=(coOrders[name]||0)+1;
+    }
+  });
+  const sorted = Object.entries(coOrders).sort((a,b)=>b[1]-a[1]);
+  const total = orders.length||1;
+  document.getElementById('topCompanies').innerHTML = sorted.slice(0,4).map(([name,cnt])=>`
+    <div class="company-row">
+      <span class="company-name">${name}</span>
+      <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:${Math.round(cnt/total*100)}%;background:var(--accent)"></div></div>
+      <span class="company-pct">${Math.round(cnt/total*100)}%</span>
+    </div>
+  `).join('') || '<div style="color:var(--text3);font-size:13px">No shipment data yet</div>';
+
+  // Recent orders
+  document.getElementById('recentOrdersDash').innerHTML = orders.slice(-5).reverse().map(o=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${o.num}</div>
+        <div style="font-size:11px;color:var(--text3)">${o.product}</div>
+      </div>
+      <span class="badge ${statusColor(o.status)}">${o.status}</span>
+    </div>
+  `).join('');
+}
+
+function statusColor(s){
+  const map = {'Ordered':'gray','Supplier Accepted':'gray','Preparing':'orange','Ready':'yellow',
+    'Delivered to Warehouse':'yellow','Waiting Shipment':'yellow','Shipped':'cyan',
+    'In Transit':'blue','Arrived Iraq':'purple','Received':'green','Sold':'green'};
+  return map[s]||'gray';
+}
+
+function setCurr(c, el){
+  currency=c;
+  document.querySelectorAll('.curr-btn').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderDashboard();
+}
+
+// ═══════════════════════════════════════════
+//  ORDERS
+// ═══════════════════════════════════════════
+function renderOrders(filter='', statusF='', typeF=''){
+  const orders = lsg('orders');
+  const suppliers = lsg('suppliers');
+  const filtered = orders.filter(o=>{
+    const q = filter.toLowerCase();
+    const match = !q || o.num?.toLowerCase().includes(q) || o.product?.toLowerCase().includes(q) || o.model?.toLowerCase().includes(q);
+    const stMatch = !statusF || o.status===statusF;
+    const tMatch = !typeF || o.shiptype===typeF;
+    return match&&stMatch&&tMatch;
+  });
+  document.getElementById('ordersTable').innerHTML = filtered.map(o=>{
+    const sup = suppliers.find(s=>s.id===o.supplier);
+    return `<tr onclick="viewOrder('${o.id}')">
+      <td><span style="font-weight:600;color:var(--accent)">${o.num}</span></td>
+      <td>${o.product}</td>
+      <td>${sup?sup.name:o.supplier||'-'}</td>
+      <td><span class="badge gray">${o.category||'-'}</span></td>
+      <td>${o.qty}</td>
+      <td><strong>$${Number(o.total).toLocaleString()}</strong></td>
+      <td style="color:var(--text3)">IQD ${Number(o.iqd||0).toLocaleString()}</td>
+      <td><span class="badge ${statusColor(o.status)}">${o.status}</span></td>
+      <td>${o.shipment?`<span style="color:var(--cyan);font-size:12px">${o.shipment}</span>`:'-'}</td>
+      <td style="color:var(--text3);font-size:12px">${o.date||'-'}</td>
+      <td onclick="event.stopPropagation()">
+        <button class="btn btn-sm btn-secondary btn-icon" onclick="openOrderModal('${o.id}')"><i class="fas fa-edit"></i></button>
+        <button class="btn btn-sm btn-danger btn-icon" onclick="deleteItem('orders','${o.id}',renderOrders)"><i class="fas fa-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--text3)">No orders found</td></tr>';
+}
+
+function filterOrders(q=''){
+  const s = document.getElementById('orderStatusFilter')?.value||'';
+  const t = document.getElementById('orderTypeFilter')?.value||'';
+  renderOrders(q||'', s, t);
+}
+
+function openOrderModal(id=null){
+  editId=id;
+  const suppliers = lsg('suppliers');
+  document.getElementById('ord-supplier').innerHTML = suppliers.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  document.getElementById('ord-rate').value = RATE();
+  if(id){
+    const o = lsg('orders').find(x=>x.id===id);
+    if(!o) return;
+    document.getElementById('orderModalTitle').textContent='Edit Order';
+    document.getElementById('ord-num').value=o.num||'';
+    document.getElementById('ord-date').value=o.date||'';
+    document.getElementById('ord-supplier').value=o.supplier||'';
+    document.getElementById('ord-sup-num').value=o.supNum||'';
+    document.getElementById('ord-product').value=o.product||'';
+    document.getElementById('ord-category').value=o.category||'Shoes';
+    document.getElementById('ord-brand').value=o.brand||'';
+    document.getElementById('ord-model').value=o.model||'';
+    document.getElementById('ord-color').value=o.color||'';
+    document.getElementById('ord-size').value=o.size||'';
+    document.getElementById('ord-qty').value=o.qty||'';
+    document.getElementById('ord-price').value=o.price||'';
+    document.getElementById('ord-total').value=o.total||'';
+    document.getElementById('ord-rate').value=o.rate||RATE();
+    document.getElementById('ord-iqd').value=o.iqd||'';
+    document.getElementById('ord-status').value=o.status||'Ordered';
+    document.getElementById('ord-shiptype').value=o.shiptype||'Air';
+    document.getElementById('ord-ready').value=o.ready||'';
+    document.getElementById('ord-shipment').value=o.shipment||'';
+    document.getElementById('ord-notes').value=o.notes||'';
+  } else {
+    document.getElementById('orderModalTitle').textContent='New Order';
+    const n = lsg('orders').length+1;
+    document.getElementById('ord-num').value=`ORD-2026-${String(n+100).padStart(3,'0')}`;
+    document.getElementById('ord-date').value=new Date().toISOString().slice(0,10);
+    ['ord-sup-num','ord-product','ord-brand','ord-model','ord-color','ord-size','ord-qty','ord-price','ord-total','ord-iqd','ord-ready','ord-shipment','ord-notes'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('ord-status').value='Ordered';
+    document.getElementById('ord-shiptype').value='Air';
+  }
+  document.getElementById('orderModal').classList.add('open');
+}
+
+function calcOrder(){
+  const qty=parseFloat(document.getElementById('ord-qty').value)||0;
+  const price=parseFloat(document.getElementById('ord-price').value)||0;
+  const rate=parseFloat(document.getElementById('ord-rate').value)||RATE();
+  const total=qty*price;
+  document.getElementById('ord-total').value=total.toFixed(2);
+  document.getElementById('ord-iqd').value=Math.round(total*rate);
+}
+
+function saveOrder(){
+  const qty=parseFloat(document.getElementById('ord-qty').value)||0;
+  const price=parseFloat(document.getElementById('ord-price').value)||0;
+  const rate=parseFloat(document.getElementById('ord-rate').value)||RATE();
+  const o={
+    id: editId||('o'+Date.now()),
+    num: document.getElementById('ord-num').value,
+    date: document.getElementById('ord-date').value,
+    supplier: document.getElementById('ord-supplier').value,
+    supNum: document.getElementById('ord-sup-num').value,
+    product: document.getElementById('ord-product').value,
+    category: document.getElementById('ord-category').value,
+    brand: document.getElementById('ord-brand').value,
+    model: document.getElementById('ord-model').value,
+    color: document.getElementById('ord-color').value,
+    size: document.getElementById('ord-size').value,
+    qty, price, total:qty*price, rate, iqd:Math.round(qty*price*rate),
+    status: document.getElementById('ord-status').value,
+    shiptype: document.getElementById('ord-shiptype').value,
+    ready: document.getElementById('ord-ready').value,
+    shipment: document.getElementById('ord-shipment').value,
+    notes: document.getElementById('ord-notes').value,
+  };
+  const orders = lsg('orders');
+  if(editId){ const idx=orders.findIndex(x=>x.id===editId); orders[idx]=o; }
+  else orders.push(o);
+  lss('orders',orders);
+  closeModal('orderModal'); renderOrders(); editId=null;
+}
+
+function viewOrder(id){
+  const o = lsg('orders').find(x=>x.id===id);
+  if(!o) return;
+  const suppliers = lsg('suppliers');
+  const sup = suppliers.find(s=>s.id===o.supplier);
+  const allStatuses=['Ordered','Supplier Accepted','Preparing','Ready','Delivered to Warehouse','Waiting Shipment','Shipped','In Transit','Arrived Iraq','Received','Sold'];
+  const curIdx = allStatuses.indexOf(o.status);
+  document.getElementById('odTitle').textContent=`Order: ${o.num}`;
+  document.getElementById('odBody').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;font-size:13px">
+      <div><span style="color:var(--text3)">Product:</span> <strong>${o.product}</strong></div>
+      <div><span style="color:var(--text3)">Model:</span> ${o.model||'-'}</div>
+      <div><span style="color:var(--text3)">Brand:</span> ${o.brand||'-'}</div>
+      <div><span style="color:var(--text3)">Category:</span> ${o.category||'-'}</div>
+      <div><span style="color:var(--text3)">Qty:</span> <strong>${o.qty}</strong></div>
+      <div><span style="color:var(--text3)">Unit Price:</span> $${o.price}</div>
+      <div><span style="color:var(--text3)">Total:</span> <strong style="color:var(--green)">$${Number(o.total).toLocaleString()}</strong></div>
+      <div><span style="color:var(--text3)">IQD:</span> ${Number(o.iqd||0).toLocaleString()} IQD</div>
+      <div><span style="color:var(--text3)">Supplier:</span> ${sup?sup.name:'-'}</div>
+      <div><span style="color:var(--text3)">Shipment:</span> ${o.shipment||'-'}</div>
+      <div><span style="color:var(--text3)">Order Date:</span> ${o.date||'-'}</div>
+      <div><span style="color:var(--text3)">Ready Date:</span> ${o.ready||'-'}</div>
+    </div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text2)">📋 Status Timeline</div>
+    <div class="timeline">
+      ${allStatuses.map((s,i)=>`
+        <div class="tl-item">
+          <div class="tl-dot ${i<curIdx?'done':i===curIdx?'current':''}">
+            ${i<curIdx?'<i class="fas fa-check"></i>':i===curIdx?'<i class="fas fa-circle-dot"></i>':`${i+1}`}
+          </div>
+          <div class="tl-line"></div>
+          <div class="tl-content" style="padding-top:4px">
+            <div class="tl-title" style="${i===curIdx?'color:var(--accent)':i<curIdx?'color:var(--text3)':''}">${s}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    ${o.notes?`<div style="margin-top:16px;padding:12px;background:var(--bg3);border-radius:8px;font-size:13px"><strong>Notes:</strong> ${o.notes}</div>`:''}
+  `;
+  document.getElementById('orderDetailModal').classList.add('open');
+}
+
+// ═══════════════════════════════════════════
+//  SHIPMENTS
+// ═══════════════════════════════════════════
+function renderShipments(){
+  const shipments = lsg('shipments');
+  const orders = lsg('orders');
+  const shippingCos = lsg('shippingCos');
+  const warehouses = lsg('warehouses');
+
+  document.getElementById('shipmentsList').innerHTML = shipments.map(sh=>{
+    const co = shippingCos.find(c=>c.id===sh.company);
+    const wh = warehouses.find(w=>w.id===sh.warehouse);
+    const shOrders = orders.filter(o=>o.shipment===sh.shipId);
+    const totalItems = shOrders.reduce((s,o)=>s+(parseInt(o.qty)||0),0);
+    const totalVal = shOrders.reduce((s,o)=>s+(parseFloat(o.total)||0),0);
+    const typeIcon = sh.type==='Air'?'✈':'🚢';
+    const typeColor = sh.type==='Air'?'cyan':'purple';
+    return `<div class="card" style="margin-bottom:16px">
+      <div class="shipment-header-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:18px;font-weight:800;letter-spacing:-0.5px">${sh.shipId}</div>
+            <div style="font-size:13px;color:var(--text3);margin-top:2px">${co?co.name:'Unknown Company'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="badge ${typeColor}">${typeIcon} ${sh.type}</span>
+            <span class="badge ${statusColor(sh.status)}">${sh.status}</span>
+            <button class="btn btn-sm btn-secondary" onclick="openShipmentModal('${sh.id}')"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deleteItem('shipments','${sh.id}',renderShipments)"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        <div class="shipment-meta">
+          <div class="meta-item"><div class="meta-label">Warehouse</div><div class="meta-val">${wh?wh.name:'-'}</div></div>
+          <div class="meta-item"><div class="meta-label">Tracking</div><div class="meta-val" style="font-family:monospace;color:var(--cyan)">${sh.tracking||'-'}</div></div>
+          <div class="meta-item"><div class="meta-label">Weight</div><div class="meta-val">${sh.weight||0} kg</div></div>
+          <div class="meta-item"><div class="meta-label">Shipping Cost</div><div class="meta-val" style="color:var(--orange)">$${Number(sh.cost||0).toLocaleString()}</div></div>
+          <div class="meta-item"><div class="meta-label">Departure</div><div class="meta-val">${sh.depart||'-'}</div></div>
+          <div class="meta-item"><div class="meta-label">ETA</div><div class="meta-val">${sh.eta||'-'}</div></div>
+        </div>
+      </div>
+      <div style="padding:0 4px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:13px;font-weight:700">📦 Products in Shipment (${shOrders.length} orders, ${totalItems} items)</span>
+          <span style="font-size:13px;color:var(--green);font-weight:700">$${totalVal.toLocaleString()}</span>
+        </div>
+        ${shOrders.length?`<div class="table-wrap"><table>
+          <thead><tr><th>Order #</th><th>Product</th><th>Qty</th><th>Total</th><th>Status</th></tr></thead>
+          <tbody>${shOrders.map(o=>`<tr>
+            <td style="color:var(--accent);font-weight:600">${o.num}</td>
+            <td>${o.product}</td>
+            <td>${o.qty}</td>
+            <td>$${Number(o.total).toLocaleString()}</td>
+            <td><span class="badge ${statusColor(o.status)}">${o.status}</span></td>
+          </tr>`).join('')}</tbody>
+        </table></div>`:
+        `<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px 0">No orders assigned to this shipment yet</div>`}
+      </div>
+    </div>`;
+  }).join('') || '<div class="card" style="text-align:center;padding:40px;color:var(--text3)"><i class="fas fa-ship" style="font-size:40px;margin-bottom:12px;display:block;opacity:0.3"></i>No shipments yet. Create your first shipment!</div>';
+}
+
+function openShipmentModal(id=null){
+  editId=id;
+  const shippingCos = lsg('shippingCos');
+  const warehouses = lsg('warehouses');
+  document.getElementById('sh-company').innerHTML=shippingCos.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('sh-warehouse').innerHTML=warehouses.map(w=>`<option value="${w.id}">${w.name}</option>`).join('');
+  if(id){
+    const sh=lsg('shipments').find(x=>x.id===id);
+    if(!sh)return;
+    document.getElementById('sh-id').value=sh.shipId||'';
+    document.getElementById('sh-company').value=sh.company||'';
+    document.getElementById('sh-warehouse').value=sh.warehouse||'';
+    document.getElementById('sh-type').value=sh.type||'Air';
+    document.getElementById('sh-container').value=sh.container||'';
+    document.getElementById('sh-tracking').value=sh.tracking||'';
+    document.getElementById('sh-weight').value=sh.weight||'';
+    document.getElementById('sh-volume').value=sh.volume||'';
+    document.getElementById('sh-cost').value=sh.cost||'';
+    document.getElementById('sh-status').value=sh.status||'Preparing';
+    document.getElementById('sh-depart').value=sh.depart||'';
+    document.getElementById('sh-eta').value=sh.eta||'';
+    document.getElementById('sh-arrival').value=sh.arrival||'';
+    document.getElementById('sh-notes').value=sh.notes||'';
+  } else {
+    ['sh-id','sh-container','sh-tracking','sh-weight','sh-volume','sh-cost','sh-notes','sh-depart','sh-eta','sh-arrival'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('sh-type').value='Air';
+    document.getElementById('sh-status').value='Preparing';
+  }
+  document.getElementById('shipmentModal').classList.add('open');
+}
+
+function saveShipment(){
+  const sh={
+    id: editId||('sh'+Date.now()),
+    shipId: document.getElementById('sh-id').value,
+    company: document.getElementById('sh-company').value,
+    warehouse: document.getElementById('sh-warehouse').value,
+    type: document.getElementById('sh-type').value,
+    container: document.getElementById('sh-container').value,
+    tracking: document.getElementById('sh-tracking').value,
+    weight: parseFloat(document.getElementById('sh-weight').value)||0,
+    volume: parseFloat(document.getElementById('sh-volume').value)||0,
+    cost: parseFloat(document.getElementById('sh-cost').value)||0,
+    status: document.getElementById('sh-status').value,
+    depart: document.getElementById('sh-depart').value,
+    eta: document.getElementById('sh-eta').value,
+    arrival: document.getElementById('sh-arrival').value,
+    notes: document.getElementById('sh-notes').value,
+  };
+  const shipments = lsg('shipments');
+  if(editId){ const idx=shipments.findIndex(x=>x.id===editId); shipments[idx]=sh; }
+  else shipments.push(sh);
+  lss('shipments',shipments);
+  closeModal('shipmentModal'); renderShipments(); editId=null;
+}
+
+// ═══════════════════════════════════════════
+//  INVENTORY
+// ═══════════════════════════════════════════
+function renderInventory(){
+  const products = lsg('products');
+  document.getElementById('inventoryTable').innerHTML = products.map(p=>{
+    const stock = parseInt(p.stock)||0;
+    const minStock = parseInt(p.minstock)||5;
+    const reserved = Math.floor(stock*0.1);
+    const available = stock-reserved;
+    const avgCost = parseFloat(p.purchase)||0;
+    const totalVal = stock*avgCost;
+    const low = stock<=minStock;
+    return `<tr>
+      <td><strong>${p.name}</strong></td>
+      <td style="font-family:monospace;font-size:12px;color:var(--text3)">${p.sku||'-'}</td>
+      <td><span class="badge gray">${p.category||'-'}</span></td>
+      <td><strong>${stock}</strong></td>
+      <td style="color:var(--orange)">${reserved}</td>
+      <td style="color:var(--green)">${available}</td>
+      <td>$${avgCost.toFixed(2)}</td>
+      <td><strong>${currency==='usd'?'$'+totalVal.toLocaleString():'IQD '+(totalVal*RATE()).toLocaleString()}</strong></td>
+      <td>${minStock}</td>
+      <td>${low?'<span class="badge red"><i class="fas fa-triangle-exclamation"></i> Low Stock</span>':'<span class="badge green">OK</span>'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text3)">No products in inventory</td></tr>';
+}
+
+// ═══════════════════════════════════════════
+//  PRODUCTS
+// ═══════════════════════════════════════════
+const catEmoji = {Shoes:'👟',Watches:'⌚',Bags:'👜',Electronics:'📱',Clothing:'👕',Accessories:'💍',Other:'📦'};
+function renderProducts(){
+  const products = lsg('products');
+  document.getElementById('productsGrid').innerHTML = products.map(p=>`
+    <div class="card" style="cursor:pointer" onclick="openProductModal('${p.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div class="product-img" style="font-size:28px">${catEmoji[p.category]||'📦'}</div>
+        <span class="badge gray">${p.category}</span>
+      </div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:2px">${p.name}</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px">${p.brand||''} ${p.model||''}</div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
+        <span>Cost: <strong style="color:var(--orange)">$${p.purchase||0}</strong></span>
+        <span>Price: <strong style="color:var(--green)">$${p.selling||0}</strong></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--text3)">Stock: <strong style="color:var(--text)">${p.stock||0}</strong></span>
+        ${(p.stock||0)<=(p.minstock||5)?'<span class="badge red">Low</span>':'<span class="badge green">OK</span>'}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:6px" onclick="event.stopPropagation()">
+        <button class="btn btn-sm btn-secondary" style="flex:1" onclick="openProductModal('${p.id}')"><i class="fas fa-edit"></i> Edit</button>
+        <button class="btn btn-sm btn-danger btn-icon" onclick="deleteItem('products','${p.id}',renderProducts)"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+  `).join('') || '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3)">No products yet</div>';
+}
+
+function openProductModal(id=null){
+  editId=id;
+  if(id){
+    const p=lsg('products').find(x=>x.id===id);
+    if(!p)return;
+    document.getElementById('pr-name').value=p.name||'';
+    document.getElementById('pr-category').value=p.category||'Shoes';
+    document.getElementById('pr-brand').value=p.brand||'';
+    document.getElementById('pr-model').value=p.model||'';
+    document.getElementById('pr-sku').value=p.sku||'';
+    document.getElementById('pr-barcode').value=p.barcode||'';
+    document.getElementById('pr-color').value=p.color||'';
+    document.getElementById('pr-size').value=p.size||'';
+    document.getElementById('pr-purchase').value=p.purchase||'';
+    document.getElementById('pr-selling').value=p.selling||'';
+    document.getElementById('pr-stock').value=p.stock||0;
+    document.getElementById('pr-minstock').value=p.minstock||5;
+    document.getElementById('pr-desc').value=p.desc||'';
+  } else {
+    ['pr-name','pr-brand','pr-model','pr-sku','pr-barcode','pr-color','pr-size','pr-purchase','pr-selling','pr-desc'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('pr-stock').value='0';
+    document.getElementById('pr-minstock').value='5';
+    document.getElementById('pr-category').value='Shoes';
+  }
+  document.getElementById('productModal').classList.add('open');
+}
+
+function saveProduct(){
+  const p={
+    id:editId||('p'+Date.now()),
+    name:document.getElementById('pr-name').value,
+    category:document.getElementById('pr-category').value,
+    brand:document.getElementById('pr-brand').value,
+    model:document.getElementById('pr-model').value,
+    sku:document.getElementById('pr-sku').value||'SKU-'+Date.now().toString().slice(-6),
+    barcode:document.getElementById('pr-barcode').value,
+    color:document.getElementById('pr-color').value,
+    size:document.getElementById('pr-size').value,
+    purchase:parseFloat(document.getElementById('pr-purchase').value)||0,
+    selling:parseFloat(document.getElementById('pr-selling').value)||0,
+    stock:parseInt(document.getElementById('pr-stock').value)||0,
+    minstock:parseInt(document.getElementById('pr-minstock').value)||5,
+    desc:document.getElementById('pr-desc').value,
+  };
+  const products=lsg('products');
+  if(editId){const idx=products.findIndex(x=>x.id===editId);products[idx]=p;}
+  else products.push(p);
+  lss('products',products);
+  closeModal('productModal');renderProducts();editId=null;
+}
+
+// ═══════════════════════════════════════════
+//  SUPPLIERS
+// ═══════════════════════════════════════════
+function renderSuppliers(){
+  const suppliers = lsg('suppliers');
+  document.getElementById('suppliersGrid').innerHTML = suppliers.map(s=>`
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px">🏭</div>
+        <div>
+          <div style="font-size:14px;font-weight:700">${s.name}</div>
+          <div style="font-size:11px;color:var(--text3)">${s.contact||''}</div>
+        </div>
+        <span style="margin-left:auto;font-size:12px">${s.rating?s.rating.split(' ')[0]:''}</span>
+      </div>
+      <div style="font-size:12px;display:flex;flex-direction:column;gap:6px;color:var(--text2)">
+        ${s.wa?`<div><i class="fab fa-whatsapp" style="color:#25d366;width:16px"></i> ${s.wa}</div>`:''}
+        ${s.email?`<div><i class="fas fa-envelope" style="color:var(--accent);width:16px"></i> ${s.email}</div>`:''}
+        ${s.alibaba?`<a href="${s.alibaba}" target="_blank" style="color:var(--orange)"><i class="fas fa-link" style="width:16px"></i> Alibaba</a>`:''}
+      </div>
+      ${s.notes?`<div style="margin-top:10px;font-size:11px;color:var(--text3);padding:6px 8px;background:var(--bg3);border-radius:6px">${s.notes}</div>`:''}
+      <div style="margin-top:12px;display:flex;gap:6px">
+        <button class="btn btn-sm btn-secondary" style="flex:1" onclick="openSupplierModal('${s.id}')"><i class="fas fa-edit"></i> Edit</button>
+        <button class="btn btn-sm btn-danger btn-icon" onclick="deleteItem('suppliers','${s.id}',renderSuppliers)"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+  `).join('') || '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3)">No suppliers yet</div>';
+}
+
+function openSupplierModal(id=null){
+  editId=id;
+  if(id){
+    const s=lsg('suppliers').find(x=>x.id===id);
+    if(!s)return;
+    document.getElementById('sup-name').value=s.name||'';
+    document.getElementById('sup-alibaba').value=s.alibaba||'';
+    document.getElementById('sup-1688').value=s['1688']||'';
+    document.getElementById('sup-contact').value=s.contact||'';
+    document.getElementById('sup-wa').value=s.wa||'';
+    document.getElementById('sup-wechat').value=s.wechat||'';
+    document.getElementById('sup-email').value=s.email||'';
+    document.getElementById('sup-phone').value=s.phone||'';
+    document.getElementById('sup-rating').value=s.rating||'⭐⭐⭐⭐⭐ 5';
+    document.getElementById('sup-address').value=s.address||'';
+    document.getElementById('sup-notes').value=s.notes||'';
+  } else {
+    ['sup-name','sup-alibaba','sup-1688','sup-contact','sup-wa','sup-wechat','sup-email','sup-phone','sup-address','sup-notes'].forEach(id=>document.getElementById(id).value='');
+  }
+  document.getElementById('supplierModal').classList.add('open');
+}
+
+function saveSupplier(){
+  const s={
+    id:editId||('s'+Date.now()),
+    name:document.getElementById('sup-name').value,
+    alibaba:document.getElementById('sup-alibaba').value,
+    '1688':document.getElementById('sup-1688').value,
+    contact:document.getElementById('sup-contact').value,
+    wa:document.getElementById('sup-wa').value,
+    wechat:document.getElementById('sup-wechat').value,
+    email:document.getElementById('sup-email').value,
+    phone:document.getElementById('sup-phone').value,
+    rating:document.getElementById('sup-rating').value,
+    address:document.getElementById('sup-address').value,
+    notes:document.getElementById('sup-notes').value,
+  };
+  const suppliers=lsg('suppliers');
+  if(editId){const idx=suppliers.findIndex(x=>x.id===editId);suppliers[idx]=s;}
+  else suppliers.push(s);
+  lss('suppliers',suppliers);
+  closeModal('supplierModal');renderSuppliers();editId=null;
+}
+
+// ═══════════════════════════════════════════
+//  SHIPPING COMPANIES
+// ═══════════════════════════════════════════
+function renderShippingCos(){
+  const cos = lsg('shippingCos');
+  document.getElementById('shippingGrid').innerHTML = cos.map(c=>`
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--cyan),var(--accent));display:flex;align-items:center;justify-content:center;font-size:20px">🚚</div>
+        <div>
+          <div style="font-size:14px;font-weight:700">${c.name}</div>
+          <div style="font-size:11px;color:var(--text3)">${c.city||''}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        ${c.air?'<span class="badge cyan">✈ Air</span>':''}
+        ${c.sea?'<span class="badge purple">🚢 Sea</span>':''}
+      </div>
+      <div style="font-size:12px;display:flex;flex-direction:column;gap:5px;color:var(--text2)">
+        ${c.contact?`<div><i class="fas fa-user" style="width:16px;color:var(--text3)"></i> ${c.contact}</div>`:''}
+        ${c.wa?`<div><i class="fab fa-whatsapp" style="width:16px;color:#25d366"></i> ${c.wa}</div>`:''}
+        ${c.email?`<div><i class="fas fa-envelope" style="width:16px;color:var(--accent)"></i> ${c.email}</div>`:''}
+      </div>
+      <div style="margin-top:12px;display:flex;gap:6px">
+        <button class="btn btn-sm btn-secondary" style="flex:1" onclick="openShippingModal('${c.id}')"><i class="fas fa-edit"></i> Edit</button>
+        <button class="btn btn-sm btn-danger btn-icon" onclick="deleteItem('shippingCos','${c.id}',renderShippingCos)"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+  `).join('')||'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3)">No shipping companies yet</div>';
+}
+
+function openShippingModal(id=null){
+  editId=id;
+  if(id){
+    const c=lsg('shippingCos').find(x=>x.id===id);
+    if(!c)return;
+    ['name','contact','phone','wa','email','address','city','website','notes'].forEach(f=>{ const el=document.getElementById('sc-'+f); if(el) el.value=c[f]||''; });
+    document.getElementById('sc-air').value=c.air?'1':'0';
+    document.getElementById('sc-sea').value=c.sea?'1':'0';
+  } else {
+    ['sc-name','sc-contact','sc-phone','sc-wa','sc-email','sc-address','sc-city','sc-website','sc-notes'].forEach(id=>document.getElementById(id).value='');
+  }
+  document.getElementById('shippingModal').classList.add('open');
+}
+
+function saveShippingCo(){
+  const c={
+    id:editId||('sc'+Date.now()),
+    name:document.getElementById('sc-name').value,
+    contact:document.getElementById('sc-contact').value,
+    phone:document.getElementById('sc-phone').value,
+    wa:document.getElementById('sc-wa').value,
+    email:document.getElementById('sc-email').value,
+    address:document.getElementById('sc-address').value,
+    city:document.getElementById('sc-city').value,
+    website:document.getElementById('sc-website').value,
+    air:document.getElementById('sc-air').value==='1',
+    sea:document.getElementById('sc-sea').value==='1',
+    notes:document.getElementById('sc-notes').value,
+  };
+  const cos=lsg('shippingCos');
+  if(editId){const idx=cos.findIndex(x=>x.id===editId);cos[idx]=c;}
+  else cos.push(c);
+  lss('shippingCos',cos);
+  closeModal('shippingModal');renderShippingCos();editId=null;
+}
+
+// ═══════════════════════════════════════════
+//  WAREHOUSES
+// ═══════════════════════════════════════════
+function renderWarehouses(){
+  const warehouses = lsg('warehouses');
+  const shippingCos = lsg('shippingCos');
+  document.getElementById('warehousesGrid').innerHTML = warehouses.map(w=>{
+    const co=shippingCos.find(c=>c.id===w.company);
+    return `<div class="card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--yellow),var(--orange));display:flex;align-items:center;justify-content:center;font-size:20px">🏢</div>
+        <div>
+          <div style="font-size:14px;font-weight:700">${w.name}</div>
+          <div style="font-size:11px;color:var(--accent)">${co?co.name:'Unknown Company'}</div>
+        </div>
+      </div>
+      <div style="font-size:12px;display:flex;flex-direction:column;gap:5px;color:var(--text2)">
+        <div><i class="fas fa-map-marker-alt" style="width:16px;color:var(--red)"></i> ${w.city||''}, ${w.province||''}</div>
+        <div><i class="fas fa-user" style="width:16px;color:var(--text3)"></i> ${w.receiver||'-'}</div>
+        <div><i class="fas fa-phone" style="width:16px;color:var(--green)"></i> ${w.phone||'-'}</div>
+        ${w.address?`<div><i class="fas fa-building" style="width:16px;color:var(--text3)"></i> ${w.address}</div>`:''}
+        ${w.zip?`<div><i class="fas fa-mailbox" style="width:16px;color:var(--text3)"></i> Zip: ${w.zip}</div>`:''}
+      </div>
+      <div style="margin-top:12px;display:flex;gap:6px">
+        <button class="btn btn-sm btn-secondary" style="flex:1" onclick="openWarehouseModal('${w.id}')"><i class="fas fa-edit"></i> Edit</button>
+        <button class="btn btn-sm btn-danger btn-icon" onclick="deleteItem('warehouses','${w.id}',renderWarehouses)"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('')||'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3)">No warehouses yet</div>';
+}
+
+function openWarehouseModal(id=null){
+  editId=id;
+  const cos=lsg('shippingCos');
+  document.getElementById('wh-company').innerHTML=cos.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  if(id){
+    const w=lsg('warehouses').find(x=>x.id===id);
+    if(!w)return;
+    document.getElementById('wh-name').value=w.name||'';
+    document.getElementById('wh-company').value=w.company||'';
+    document.getElementById('wh-city').value=w.city||'';
+    document.getElementById('wh-province').value=w.province||'';
+    document.getElementById('wh-receiver').value=w.receiver||'';
+    document.getElementById('wh-phone').value=w.phone||'';
+    document.getElementById('wh-address').value=w.address||'';
+    document.getElementById('wh-zip').value=w.zip||'';
+    document.getElementById('wh-notes').value=w.notes||'';
+  } else {
+    ['wh-name','wh-city','wh-province','wh-receiver','wh-phone','wh-address','wh-zip','wh-notes'].forEach(id=>document.getElementById(id).value='');
+  }
+  document.getElementById('warehouseModal').classList.add('open');
+}
+
+function saveWarehouse(){
+  const w={
+    id:editId||('wh'+Date.now()),
+    name:document.getElementById('wh-name').value,
+    company:document.getElementById('wh-company').value,
+    city:document.getElementById('wh-city').value,
+    province:document.getElementById('wh-province').value,
+    receiver:document.getElementById('wh-receiver').value,
+    phone:document.getElementById('wh-phone').value,
+    address:document.getElementById('wh-address').value,
+    zip:document.getElementById('wh-zip').value,
+    notes:document.getElementById('wh-notes').value,
+  };
+  const warehouses=lsg('warehouses');
+  if(editId){const idx=warehouses.findIndex(x=>x.id===editId);warehouses[idx]=w;}
+  else warehouses.push(w);
+  lss('warehouses',warehouses);
+  closeModal('warehouseModal');renderWarehouses();editId=null;
+}
+
+// ═══════════════════════════════════════════
+//  REPORTS
+// ═══════════════════════════════════════════
+function renderReports(){
+  const orders = lsg('orders');
+  const shipments = lsg('shipments');
+  const totalPurchases = orders.reduce((s,o)=>s+(parseFloat(o.total)||0),0);
+  const totalShipping = shipments.reduce((s,sh)=>s+(parseFloat(sh.cost)||0),0);
+
+  document.getElementById('rpt-purchases').textContent='$'+totalPurchases.toLocaleString();
+  document.getElementById('rpt-shipping').textContent='$'+totalShipping.toLocaleString();
+  document.getElementById('rpt-orders').textContent=orders.length;
+
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthly=new Array(12).fill(0);
+  orders.forEach(o=>{ if(o.date) monthly[new Date(o.date).getMonth()]++; });
+
+  if(chartRptMonthly) chartRptMonthly.destroy();
+  chartRptMonthly=new Chart(document.getElementById('rptMonthly'),{
+    type:'line',
+    data:{labels:months,datasets:[{label:'Orders',data:monthly,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.1)',tension:0.4,fill:true}]},
+    options:{plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#94a3b8'}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#94a3b8'}}}}
+  });
+
+  const cats={};
+  orders.forEach(o=>{ cats[o.category||'Other']=(cats[o.category||'Other']||0)+1; });
+  if(chartRptCat) chartRptCat.destroy();
+  chartRptCat=new Chart(document.getElementById('rptCategory'),{
+    type:'doughnut',
+    data:{labels:Object.keys(cats),datasets:[{data:Object.values(cats),backgroundColor:['#3b82f6','#f59e0b','#10b981','#8b5cf6','#f97316','#06b6d4','#ef4444'],borderWidth:0}]},
+    options:{plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11}}}}}
+  });
+
+  const suppliers=lsg('suppliers');
+  const supOrders={};
+  orders.forEach(o=>{
+    const s=suppliers.find(x=>x.id===o.supplier);
+    const name=s?s.name:'Unknown';
+    supOrders[name]=(supOrders[name]||0)+1;
+  });
+  if(chartRptSup) chartRptSup.destroy();
+  chartRptSup=new Chart(document.getElementById('rptSupplier'),{
+    type:'bar',
+    data:{labels:Object.keys(supOrders),datasets:[{data:Object.values(supOrders),backgroundColor:'rgba(139,92,246,0.7)',borderRadius:6}]},
+    options:{plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#94a3b8'}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#94a3b8'}}}}
+  });
+
+  const airO=orders.filter(o=>o.shiptype==='Air').length;
+  const seaO=orders.filter(o=>o.shiptype==='Sea').length;
+  const airV=orders.filter(o=>o.shiptype==='Air').reduce((s,o)=>s+(parseFloat(o.total)||0),0);
+  const seaV=orders.filter(o=>o.shiptype==='Sea').reduce((s,o)=>s+(parseFloat(o.total)||0),0);
+  if(chartRptAS) chartRptAS.destroy();
+  chartRptAS=new Chart(document.getElementById('rptAirSea'),{
+    type:'bar',
+    data:{
+      labels:['Air','Sea'],
+      datasets:[
+        {label:'Orders',data:[airO,seaO],backgroundColor:'rgba(6,182,212,0.7)',borderRadius:6},
+        {label:'Value ($)',data:[airV,seaV],backgroundColor:'rgba(99,102,241,0.7)',borderRadius:6}
+      ]
+    },
+    options:{plugins:{legend:{position:'bottom',labels:{color:'#94a3b8'}}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#94a3b8'}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#94a3b8'}}}}
+  });
+}
+
+// ═══════════════════════════════════════════
+//  SEARCH
+// ═══════════════════════════════════════════
+function handleGlobalSearch(q){
+  if(q.length>1){ nav('search', null); document.getElementById('advSearch').value=q; runAdvSearch(); }
+}
+
+function runAdvSearch(){
+  const q=(document.getElementById('advSearch').value||'').toLowerCase();
+  const type=document.getElementById('advSearchType').value;
+  if(!q){ document.getElementById('searchResults').innerHTML=''; return; }
+  let html='';
+  if(type==='all'||type==='orders'){
+    const r=lsg('orders').filter(o=>JSON.stringify(o).toLowerCase().includes(q));
+    if(r.length) html+=`<div class="card" style="margin-bottom:16px"><div class="card-title"><i class="fas fa-box"></i> Orders (${r.length})</div><div class="table-wrap"><table><thead><tr><th>Order #</th><th>Product</th><th>Status</th><th>Total</th></tr></thead><tbody>${r.map(o=>`<tr onclick="viewOrder('${o.id}')"><td style="color:var(--accent)">${o.num}</td><td>${o.product}</td><td><span class="badge ${statusColor(o.status)}">${o.status}</span></td><td>$${Number(o.total).toLocaleString()}</td></tr>`).join('')}</tbody></table></div></div>`;
+  }
+  if(type==='all'||type==='products'){
+    const r=lsg('products').filter(p=>JSON.stringify(p).toLowerCase().includes(q));
+    if(r.length) html+=`<div class="card" style="margin-bottom:16px"><div class="card-title"><i class="fas fa-tag"></i> Products (${r.length})</div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Brand</th><th>SKU</th><th>Stock</th><th>Price</th></tr></thead><tbody>${r.map(p=>`<tr><td>${p.name}</td><td>${p.brand||'-'}</td><td style="font-family:monospace;font-size:12px">${p.sku||'-'}</td><td>${p.stock||0}</td><td>$${p.selling||0}</td></tr>`).join('')}</tbody></table></div></div>`;
+  }
+  if(type==='all'||type==='suppliers'){
+    const r=lsg('suppliers').filter(s=>JSON.stringify(s).toLowerCase().includes(q));
+    if(r.length) html+=`<div class="card" style="margin-bottom:16px"><div class="card-title"><i class="fas fa-industry"></i> Suppliers (${r.length})</div>${r.map(s=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)"><strong>${s.name}</strong> <span style="color:var(--text3);font-size:12px">${s.contact||''}</span></div>`).join('')}</div>`;
+  }
+  if(type==='all'||type==='shipments'){
+    const r=lsg('shipments').filter(s=>JSON.stringify(s).toLowerCase().includes(q));
+    if(r.length) html+=`<div class="card"><div class="card-title"><i class="fas fa-ship"></i> Shipments (${r.length})</div>${r.map(s=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><strong style="color:var(--cyan)">${s.shipId}</strong> — ${s.type} — <span class="badge ${statusColor(s.status)}">${s.status}</span> — Tracking: <code>${s.tracking||'-'}</code></div>`).join('')}</div>`;
+  }
+  document.getElementById('searchResults').innerHTML = html||`<div class="card" style="text-align:center;padding:40px;color:var(--text3)"><i class="fas fa-search" style="font-size:32px;margin-bottom:12px;display:block;opacity:0.3"></i>No results for "${q}"</div>`;
+}
+
+// ═══════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════
+function closeModal(id){ document.getElementById(id).classList.remove('open'); editId=null; }
+
+function deleteItem(store, id, cb){
+  if(!confirm('Delete this item?')) return;
+  const items=lsg(store).filter(x=>x.id!==id);
+  lss(store,items); if(cb) cb();
+}
+
+function toggleNotif(){
+  document.getElementById('notifPanel').classList.toggle('open');
+}
+
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme');
+  const next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  updateThemeBtn();
+}
+function updateThemeBtn(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  document.getElementById('themeIcon').className=isDark?'fas fa-moon':'fas fa-sun';
+}
+
+function saveSettings(){
+  lss('exRate',document.getElementById('settExRate').value||1310);
+}
+
+function exportCSV(type){
+  const data=lsg(type);
+  if(!data.length){alert('No data to export');return;}
+  const keys=Object.keys(data[0]);
+  const csv=[keys.join(','),...data.map(r=>keys.map(k=>JSON.stringify(r[k]||'')).join(','))].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=type+'-export.csv'; a.click();
+}
+
+function exportAllData(){
+  const data={orders:lsg('orders'),suppliers:lsg('suppliers'),products:lsg('products'),shipments:lsg('shipments'),shippingCos:lsg('shippingCos'),warehouses:lsg('warehouses')};
+  const a=document.createElement('a');
+  a.href='data:text/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(data,null,2));
+  a.download='china-import-backup.json'; a.click();
+}
+
+function importData(){
+  const input=document.createElement('input');
+  input.type='file'; input.accept='.json';
+  input.onchange=e=>{
+    const f=e.target.files[0];
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{
+        const d=JSON.parse(ev.target.result);
+        Object.entries(d).forEach(([k,v])=>lss(k,v));
+        alert('Data imported successfully!');
+        initApp();
+      }catch(e){ alert('Invalid JSON file'); }
+    };
+    r.readAsText(f);
+  };
+  input.click();
+}
+
+function clearData(){
+  ['orders','suppliers','products','shipments','shippingCos','warehouses'].forEach(k=>localStorage.removeItem('cim_'+k));
+  seedData(); initApp();
+}
+
+function exportPage(){
+  window.print();
+}
+
+// Close notif panel when clicking outside
+document.addEventListener('click',e=>{
+  const panel=document.getElementById('notifPanel');
+  if(panel.classList.contains('open')&&!panel.contains(e.target)&&!e.target.closest('.icon-btn')){
+    panel.classList.remove('open');
+  }
+});
+
+// Close modals clicking overlay
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); });
+});
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+function initApp(){
+  renderDashboard();
+  // Load settings
+  const rate=ls('exRate');
+  if(rate&&document.getElementById('settExRate')) document.getElementById('settExRate').value=rate;
+}
+</script>
+</body>
+</html>
